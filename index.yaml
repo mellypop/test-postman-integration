@@ -1,0 +1,1972 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: RAPTR API
+  description: 
+      This documentation attempts to lay out the API for the RAPTR web application. Most of the actions described below require authentication via a JWT bearer token.
+      These can be generated within the RAPTR web application or via the `/person/new-token` path shown below.  
+      
+      Since not all paths/actions are available to all users, those that are admin only will be marked below.
+servers:
+    - url: 'https://rsith.stjude.org/raptr/api/stjude/v1'
+      description: 'Production'
+    - url: 'https://rsith-dev.stjude.org/raptr/api/stjude/v1'
+      description: 'Development'
+    - url: 'https://rsith-test.stjude.org/raptr/api/stjude/v1'
+      description: 'Testing'    
+paths:
+    /anls_runs/{anls_run_name}/notify:
+        post:
+            summary: 'Send notifications related to the analysis run'
+            description: ''
+            parameters:
+                -   name: anls_run_name
+                    in: path
+                    required: true
+                    schema:
+                        type: string
+                    example: 0XEp4VgW
+                -   name: message
+                    in: query
+                    schema:
+                        type: string
+            responses:
+                200:
+                    description: 'Notifications sent successfully'
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/Notification'
+    /anls_runs/{anls_run_name}/status:
+        get:
+            summary: 'Get the status of a run by name'
+            description: ''
+            parameters:
+                -   name: anls_run_name
+                    in: path
+                    required: true
+                    schema:
+                        type: string
+                    example: 0XEp4VgW
+            responses:
+                200:
+                    description: 'The analysis run object for the given name'
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AnlsRun'
+        post:
+            summary: 'Set the status of run items by run name'
+            description: ''
+            parameters:
+                -   name: anls_run_name
+                    in: path
+                    required: true
+                    schema:
+                        type: string
+                    example: 0XEp4VgW
+                -   name: old_status
+                    in: query
+                    required: true
+                    schema:
+                        type: string
+                    description: The status code that the items to be updated currently have
+                    example: I
+                -   name: new_status
+                    in: query
+                    required: true
+                    schema:
+                        type: string
+                    description: The status code to set for the relevant items
+                    example: S
+                -   name: send_notifications
+                    in: query
+                    required: true
+                    schema:
+                        type: boolean
+                -   name: message
+                    in: query
+                    schema:
+                        type: string
+                    
+            responses:
+                200:
+                    description: 'Statuses for the run successfully updated'
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AnlsRun'
+    /anls_runs/comb/status:
+        get:
+            summary: Check the status of the comb
+            description:
+                Returns an array of AnlsRuns that have not yet been completed, are of a combable analysis type, and have a status of either initialized (I),
+                started (S), or failed (F).
+            responses:
+                200:
+                    description:
+                        Returns an array of associative arrays that describe analysis run objects that meet the search criteria
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: array
+                                    items:
+                                        oneOf:
+                                            - type: integer
+                                            - type: string
+                                    properties:
+                                        anls_run_id:
+                                            type: integer
+                                            description: The primary key for the analysis run record
+                                            example: 123456
+                                        name:
+                                            type: string
+                                            description: The randomly generated name for the analysis run
+                                            example: 0XEp4VgW
+                                        anls_type.type:
+                                            type: string
+                                            description: The name of the analysis type being run
+                                            example: intake
+                                        ordinal:
+                                            type: integer
+                                            example: 22
+                                        anls_run_item_id:
+                                            type: integer
+                                            description: The unique identifier for the item the analysis is being run on
+                                            example: 123456
+                                        status:
+                                            type: string
+                                            description: The status of the run
+                                            example: I
+                                        item_type:
+                                            type: string
+                                            description: The type of item the run is being performed on (e.g., BAM, BAM_PAIR, etc.).
+                                            example: bam_pair
+                                        item_id:
+                                            type: integer
+                                            description:
+                                                The unique identifier for the item subtype the run is being performed on. This is different from
+                                                `anls_run_item_id` as it is an identifier for the table that the specific blt item is located on. For example,
+                                                a BAM will be located in the bam table.
+                                            example: 123456
+    /anls_runs/comb/{order_id}:
+        get:
+            summary: 'Run the comb for a specific order'
+            description: 'Runs the comb over a specific order to update the analysis runs and associated items contained in that order'
+            parameters:
+                -   name: order_id
+                    in: path
+                    required: true
+                    schema:
+                        type: integer
+                    example: 123456
+            responses:
+                200:
+                    description: 'Returns the return code and output of the comb'
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    oneOf:
+                                        - type: integer
+                                        - type: string
+                                properties:
+                                    return_code:
+                                        type: integer
+                                        description: The code returned after running the comb
+                                        example: 0
+                                    output:
+                                        type: string
+                                        description: The output generated by the comb
+    /anls_runs/pending/{anls_type}:
+        get:
+            summary: List pending runs
+            description: Returns a list of analysis runs that have been initialized but not started.
+            parameters:
+                -   name: anls_type
+                    in: path
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                200:
+                    description: An array of analysis runs in progress
+    /bam:
+        get:
+            summary: List BAMs
+            description: Returns an array of all bams
+            responses:
+                200:
+                    description: An array of BAMs
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    $ref: '#/components/schemas/Bam'
+        post:
+            summary: Create BAM
+            description: Create a BAM record
+            parameters:
+                - name: qualifier
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                - name: sample_target_project_id
+                  in: query
+                  required: true
+                  schema:
+                      type: integer
+                - name: anls_type_id
+                  in: query
+                  required: false
+                  schema:
+                      type: integer
+                - name: genome_id
+                  in: query
+                  required: false
+                  schema:
+                      type: integer
+                - name: notes
+                  in: query
+                  required: false
+                  schema:
+                      type: string
+                - name: status
+                  in: query
+                  required: false
+                  schema:
+                      type: string
+            responses:
+                201:
+                    description: BAM created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                $ref: '#/components/schemas/Bam'
+    /bam/{id}:
+        get:
+            summary: Show BAM
+            description: Returns a JSON object describing the BAM record with the given primary key
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    description: A BAM object
+        post:
+            summary: Edit BAM
+            description: Edit a BAM
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                      type: integer
+                - name: qualifier
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                - name: sample_target_project_id
+                  in: query
+                  required: true
+                  schema:
+                      type: integer
+                - name: anls_type_id
+                  in: query
+                  required: false
+                  schema:
+                      type: integer
+                - name: genome_id
+                  in: query
+                  required: false
+                  schema:
+                      type: integer
+                - name: notes
+                  in: query
+                  required: false
+                  schema:
+                      type: string
+                - name: status
+                  in: query
+                  required: false
+                  schema:
+                      type: string
+            responses:
+                200:
+                    description: BAM edited
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Bam'
+    /centers:
+        get:
+            summary: List Centers
+            description: Returns an array of all centers ordered by their names.
+            responses:
+                200:
+                    description: An array of centers
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/Center'
+    /notifications:
+        get:
+            summary: List Notifications
+            description: Returns a list of all notifications ordered by their descriptions.
+            responses:
+                200:
+                    description: An array of notifications
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/Notification'
+    /order:
+        post:
+            summary: Create Order
+            description: Creates a new order record
+            tags:
+                - order
+            parameters:
+                - name: sampleTargetProjects
+                  in: header
+                  required: true
+                  schema:
+                    type: array
+                    items:
+                        type: integer
+            responses:
+                200:
+                    description: 'Order has been created successfully'
+                400:
+                    description: 'One or more required parameters have not been included.'
+    /order/{orderCode}/notes:
+        post:
+            summary: Add Note to Order
+            description: Add the given note to the order
+            parameters:
+                -   name: orderCode
+                    in: path
+                    required: true
+                    example: 123456
+                    schema:
+                        type: integer
+                -   name: notes
+                    in: query
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                201:
+                    description: Notes added to order
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: string
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Notes have been added.
+
+    /order/{orderCode}/samples:
+        post:
+            summary: 'Add Sample(s) to Order'
+            description: 'Adds the given comma delimited list of sample names to the order.'
+            parameters:
+                -   name: orderCode
+                    in: path
+                    required: true
+                    example: 123456
+                    schema:
+                        type: integer
+                -   name: samples
+                    in: query
+                    required: true
+                    example: SJMB030055_D3
+                    description: A comma delimited list of sample Comp Bio IDs to add to the order
+                    schema:
+                        type: string
+            responses:
+                201:
+                    description: Samples added to order
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    oneOf:
+                                        - type: string
+                                        - type: array
+                                          items:
+                                              type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Sample(s) have been added to the analysis request.
+                                    new_samples:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/Sample'
+    /order/{orderCode}/sjid:
+        post:
+            summary: Add Sjid Sample(s) to Order
+            description: Add samples from a sample registration form (Sjid) to the order
+            parameters:
+                -   name: orderCode
+                    in: path
+                    required: true
+                    example: 123456
+                    schema:
+                        type: integer
+                -   name: sjid
+                    in: query
+                    required: true
+                    example: 123456
+                    schema:
+                        type: integer
+            responses:
+                201:
+                    description: Samples added to order
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    oneOf:
+                                        - type: string
+                                        - type: array
+                                          items:
+                                              type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Sample(s) have been added to the analysis request
+                                    new_samples:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/Sample'
+
+    /order/{orderCode}/srm:
+        post:
+            summary: 'Add Srm to Order'
+            description: ''
+            parameters:
+                -   name: orderCode
+                    in: path
+                    required: true
+                    example: 123456
+                    schema:
+                        type: integer
+                -   name: srm
+                    in: query
+                    required: true
+                    schema:
+                        type: integer
+            responses:
+                201:
+                    description: 'Srm added to order'
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: string
+                                properties:
+                                    message:
+                                        type: string
+                                        example: SRM number has been added to the analysis request
+    /order/{orderCode}/suite:
+        post:
+            summary: 'Add Suite to Order'
+            description: 'Adds the given suite to the order'
+            parameters:
+                -   name: orderCode
+                    in: path
+                    required: true
+                    example: 123456
+                    schema:
+                        type: integer
+                -   name: suite
+                    in: query
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                201:
+                    description: Suite has been added
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: string
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Suite has been added.
+
+    /person:
+        get:
+            summary: '[Admin only] List People'
+            description: '*[Admin only]* Returns all users'
+            tags:
+                - person
+            responses:
+                200:
+                    description: A list of all users in RAPTR
+            security:
+                - Admin: []
+        post:
+            summary: '[Admin only] Create Person'
+            description:
+                '*[Admin only]* Create a new person record. The person is created from information provieded by LDAP. If the email does not correspond to an LDAP
+                user, then an error will be thrown. If desired, a `projectId` parameter can also be passed to add the new person to the referenced project.'
+            parameters:
+                -   name: email
+                    in: query
+                    required: true
+                    schema:
+                        type: string
+                -   name: projectId
+                    in: query
+                    example: 123456
+                    schema:
+                        type: integer
+            responses:
+                201:
+                    description: Person successfully created
+    /person/me:
+        get:
+            summary: My Profile
+            description: The authenticated user's profile
+            responses:
+                200:
+                    description: Returns information about the authenticated user.
+    /person/new-token:
+        get:
+            summary: /person/new-token
+            description: Generates a JWT bearer token for the authenticated user. Authentication for this action uses the username and password for the account for which a token is to be created instead of using a token itself.
+            responses:
+                200:
+                    description: Returns the newly created token
+            security:
+                - BasicAuth: []
+    /person/{username}/delete-notification:
+        post:
+            summary: 'Unsubscribe Person from Notification'
+            description: 'Unsubscribes the person from the notification referenced'
+            parameters:
+                -   name: username
+                    in: path
+                    required: true
+                    schema:
+                        type: string
+                -   name: person_notification_id
+                    in: query
+                    required: true
+                    schema:
+                        type: integer
+            responses:
+                200:
+                    description: Person unusbscribed from notification
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: boolean
+                                properties:
+                                    deleted:
+                                        type: boolean
+    /person/{username}/notifications:
+        get:
+            summary: 'List Notifications for Person'
+            description: 'Returns an array of notification records that the queried user is subscribed to'
+            parameters:
+                -   name: username
+                    in: path
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                200:
+                    description: 'An array of notificaitons'
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/PersonNotification'
+                404:
+                    description: 'Person not found'
+    /person/{username}/notification:
+        post:
+            summary: Subscribe Person to Notification
+            description: Subscribe the given person to the given notification
+            parameters:
+                -   name: username
+                    in: path
+                    required: true
+                    schema:
+                        type: string
+                -   name: new_notification
+                    in: query
+                    required: true
+                    schema:
+                        type: array
+                        items:
+                            oneOf:
+                                - type: string
+                                - type: integer
+                        required:
+                            - username
+                            - notification_id
+                            - center_id
+                            - target_id
+                            - project_id
+                        properties:
+                            username:
+                                type: string
+                            notification_id:
+                                type: integer
+                            center_id:
+                                type: integer
+                            target_id:
+                                type: integer
+                            project_id:
+                                type: integer
+            responses:
+                200:
+                    description: 'Subscribed to notification'
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/PersonNotification'
+    /project:
+        get:
+            summary: 'List projects'
+            description: 'Returns an array of projects that the authenticated user can access'
+            tags:
+                - project
+            security:
+                - Admin: []
+                - Analyst: []
+            responses:
+                '200':
+                    description: 'An array of the projects the authenticated user can access'
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/Project'
+                403:
+                    description: "Unauthorized"
+                default:
+                    description: "Unexpected error"
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+        post:
+            summary: 'Create Project'
+            description: 'Creates a new project record based on the given input'
+            parameters:
+                -   name: projectName
+                    in: query
+                    required: true
+                    description: The name of the project to be created
+                    schema:
+                        type: string
+                -   name: subProject
+                    in: query
+                    required: true
+                    description: The name to use for this project's subproject name
+                    schema:
+                        type: string
+                -   name: lead
+                    in: query
+                    required: true
+                    description: The username for the project's leader
+                    example: someUser
+                    schema:
+                        type: string
+                -   name: description
+                    in: query
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                201:
+                    description: Project successfully created
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Project'
+        put:
+            summary: Update Project
+            description: Updates the relevant project record with new information
+            parameters:
+                -   name: projectId
+                    in: query
+                    required: true
+                    example: 123456
+                    schema:
+                        type: integer
+                -   name: description
+                    in: query
+                    required: true
+                    schema:
+                        type: string
+                -   name: notes
+                    in: query
+                    schema:
+                        type: string
+                -   name: lead
+                    in: query
+                    required: true
+                    description: The username for the leader of the project
+                    schema:
+                        type: string
+            responses:
+                201:
+                    description: Project successfully updated
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        message:
+                                            type: string
+                                            example: Project updated
+                403:
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Access denied
+    /project/{name}/{subproject}:
+        get:
+            summary: 'Lookup Project by Name and Subproject Name'
+            description:
+                Gets a project record for the given project name and subproject name
+            parameters:
+                -   name: name
+                    in: path
+                    required: true
+                    description: The name of the project
+                    schema:
+                        type: string
+                -   name: subproject
+                    in: path
+                    required: true
+                    description: The subproject name
+                    schema:
+                        type: string
+            responses:
+                200:
+                    description: 'The person record requested'
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Project'
+                404:
+                    description: Project not found
+                    content:
+                        application/json:
+                            schema:
+                                type: string
+                                example: Project not found
+    /project/{projectId}:
+        get:
+            summary: 'Lookup Project by ID'
+            description: 'Returns a project record based on the given primary key'
+            parameters:
+                -   name: projectId
+                    in: path
+                    required: true
+                    example: 123456
+                    schema:
+                        type: integer
+            responses:
+                200:
+                    description: The requested project record
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Project'
+                404:
+                    description: Project not found
+    /project/{projectId}/order/{orderCode}/sjid:
+        post:
+            summary: Add sample from sample registration to order
+            description: Add the samples from a given sample registration form (Sjid) to the given order.
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique identifier for the project the given order is associated with.
+                  schema:
+                      type: integer
+                  example: 123456
+                - name: orderCode
+                  in: path
+                  required: true
+                  description: The unique identifier for the order that samples are to be added to.
+                  schema:
+                      type: integer
+                  example: 123457
+                - name: sjid
+                  in: query
+                  required: true
+                  description: The unique identifier for the sample registration form (Sjid) that contains sample(s) to be added.
+                  schema:
+                      type: integer
+                  example: 123458
+            responses:
+                201:
+                    description: Samples successfully added to order
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                properties:
+                                    message:
+                                        type: string
+                                        description: A success message indicating that samples have been added.
+                                        example: Sample(s) have been added to the analysis request.
+                                items:
+                                    type: object
+                                    $ref: '#/components/schemas/Sample'
+    /project-request:
+        post:
+            summary: Request New Research Project
+            description: 'Creates a request for a new research project.'
+            deprecated: true
+            parameters:
+                -   name: piname
+                    in: query
+                    required: true
+                    schema:
+                        type: string
+                -   name: request_type
+                    in: query
+                    required: true
+                    schema:
+                        type: string
+                -   name: projectname
+                    in: query
+                    required: true
+                    schema:
+                        type: string
+                -   name: description
+                    in: query
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                200:
+                    description: Request recieved
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: We recieved your request. You'll receive an email once your project is setup.
+                400:
+                    description: Missing a required field
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: PI Name is a required field
+    /read_group:
+        post:
+            summary: Create new read group
+            parameters:
+                - name: target_name
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                  example:
+                      value: 'EXOME'
+                - name: lab_name
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                  example:
+                      value: 'SJMB030055_D3'
+                - name: dryrun
+                  description: Whether or not the operations should be rolled back at the end. Typically used for testing. (False by default)
+                  in: query
+                  schema:
+                      type: boolean
+                  example:
+                      value: false
+                - name: project_name
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                  example:
+                      value: 'Eval'
+                - name: subproject
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                  example:
+                      value: 'Clinical-FFPE'
+                - name: PL
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                  example:
+                      value: 'Illumina'
+                - name: PU
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                  example:
+                      value: 'C27ER'
+                - name: name_in_source
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                  example:
+                      value: 'SJMB030055_D3'
+                - name: SM
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                  example:
+                      value: 'SJMB030055_D3'
+                - name: LB
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                  example:
+                      value: 'SJMB030055_D3'
+                - name: index_text
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                  example:
+                      value: 'GTGAAA'
+                - name: DT
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                  example:
+                      value: '2017-04-04'
+                - name: source_name
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                  example:
+                      value: 'C1TVCACXX.11'
+            responses:
+                201:
+                    description: Read group created successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    source.CN:
+                                        type: string
+                                        example:
+                                            value: 'STJUDE'
+                                    sample.formal_name:
+                                        type: string
+                                        description: The Comp Bio ID for the associated sample
+                                        example:
+                                            value: SJMB030055_D3
+                                    loadable.loadable_id:
+                                        type: integer
+                                        description: The unique identifier for the associated loadable
+                                        example:
+                                            value: 458403
+                                    read_group.rg_label:
+                                        type: string
+                                        example:
+                                            value: j
+                                    read_group.read_group_id:
+                                        type: integer
+                                        description: The unique identifier for the newly created read group
+                                        example:
+                                            value: 458404
+    /runs:
+        post:
+            summary: Create new run
+            description: Creates a new run record
+            responses:
+                201:
+                    description: Newly created runs.
+
+                400:
+                    description: No run information found.
+                401:
+                    description: Do not have privilege to create runs.
+    /runs/archivable:
+        get:
+            summary: List Archivable Runs
+            description: 'Returns an array of archivable runs'
+            responses:
+                200:
+                    description: A list of archivable runs
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/Run'
+    /runs/ready:
+        get:
+            summary: Get runs ready for sequencing
+            description: Returns an array of runs that are ready for sequencing (runs without lanes).
+            responses:
+                200:
+                    description: A list or runs ready for sequencing
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        run_id:
+                                            description: The unique identifier for the run
+                                            type: integer
+                                        run_name:
+                                            description: The name of the run
+                                            type: string
+                                        run_date:
+                                            type: string
+                                        flowcell:
+                                            type: string
+                                        needs_quality_trim:
+                                            type: boolean
+                                        notes:
+                                            type: string
+                                        center_id:
+                                            description: The unique identifier for the run's center
+                                            type: integer
+                                        name:
+                                            description: The name of the run's center
+                                            type: string
+                                        official_name:
+                                            description: The official name of the center
+                                            type: string
+    /runs/recent:
+        get:
+            summary: List recent runs
+            description:
+                Get the runs inserted recently (within the past 2 weeks) for the authenticated user's center. The user submitting this request must belong
+                to at least one center.
+            responses:
+                200:
+                    description: An array of recent runs
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        run_name:
+                                            type: string
+                                        submitted_date:
+                                            type: string
+                                            example:
+                                                value: '25-12-21'
+                                        processed_date:
+                                            type: string
+                                            example:
+                                                value: Not Yet Started
+
+                500:
+                    description: 'User does not belong to a center'
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    errorMessage:
+                                        type: string
+    /runs/stale:
+        get:
+            summary: List stale runs
+            description:
+                Returns a list of runs that are considered stale (i.e., Runs created between 24 weeks before and 2 weeks before now that have not been assigned
+                a read group, lane, or a source).
+            responses:
+                200:
+                    description: An array of runs that are stale
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        run_name:
+                                            type: string
+                                        submitted_date:
+                                            type: string
+                                            example:
+                                                value: '25-12-21'
+                                        processed_date:
+                                            type: string
+                                            example:
+                                                value: 'Not Yet Started'
+    /sample/{name}:
+        get:
+            summary: 'Lookup Sample by Name'
+            description:
+                Returns a sample record for the given name.
+            parameters:
+                -   name: name
+                    in: path
+                    required: true
+                    description: The Comp Bio ID for the sample in question
+                    schema:
+                        type: string
+            responses:
+                200:
+                    description: 'The requested sample record'
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Sample'
+                400:
+                    description: Invalid request.
+                    content:
+                        application/json:
+                            schema:
+                                type: string
+                                example: Invalid request. null arguments for get@SampleController
+                404:
+                    description: Sample not found
+                    content:
+                        application/json:
+                            schema:
+                                type: string
+                                example: Sample not found
+    /sample_synonym/{name}:
+        get:
+            summary: Sample Lookup
+            description: "Returns information related to the sample and its synonyms (SJUID and TBID)"
+            tags:
+                - sample
+                - sample_synonym
+            security:
+                - Admin: []
+                - Analyst: []
+            parameters:
+                - name: name
+                  in: path
+                  required: true
+                  description: An identifier to use for looking up a sample or a subject. This can be in the form of a CompBio ID, the lab's name for the sample|subject, the pi_name, an SJUID, or a TBID.
+                  schema:
+                      type: string
+                  example:
+                      value: SJ123456
+            responses:
+                '201':
+                    description: 'Sample(s) found for the given identifier'
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            'comp_bio_sample_name':
+                                                type: string
+                                                description: "The sample's CompBio ID"
+                                            'comp_bio_subject':
+                                                type: string
+                                                description: "The name of the sample's subject"
+                                            'sjuid':
+                                                'type': string
+                                                description: "The sample's SJUID"
+                                            'tbid':
+                                                'type': string
+                                                'description': "The sample's TBID"
+                                            'data':
+                                                'type': array
+                                                'items':
+                                                    type: object
+                                                    properties:
+                                                        'bam_status':
+                                                            'type': string
+                                                            'description': "The BAM's status"
+                                                        'seq_type':
+                                                            'type': string
+                                                            'description': "The sequencing type"
+                                                        'number_of_read_groups':
+                                                            'type': string
+                                                            'description': "The number of read groups"
+                            example:
+                                [
+                                    {
+                                        comp_bio_sample_name: 'JLGG003217_D2-TB-11-1840_DXL',
+                                        comp_bio_subject: 'SJ003217',
+                                        sjuid: 'SJHBBBDXPGN',
+                                        tbid: null,
+                                        data: [
+                                            {
+                                                bam_status: 'Normal',
+                                                seq_type: 'CHIPSEQ_H3K4me3-AB8',
+                                                number_of_read_groups: '2'
+                                            },
+                                            {
+                                                bam_status: 'Normal',
+                                                seq_type: 'CHIPSEQ_INPUT',
+                                                number_of_read_groups: '2'
+                                            }
+                                        ]
+                                    }
+                                ]
+                '404':
+                    description: "Identifier not found"
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    'errorMessage':
+                                        type: string
+                                        description: Identifier not found
+                'default':
+                    description: "Unexpected error"
+                    content:
+                        application/json:
+                                schema:
+                                    $ref: '#/components/schemas/Error'
+    /source:
+        post:
+            summary: Create a new source record
+            description: 'Creates a new source from the given parameters'
+            security:
+                - Analyst: []
+                - Admin: []
+            parameters:
+                - name: type
+                  in: query
+                  required: true
+                  description: The type of the source to be created. Must be one of 'lane', 'public', or 'transfer'
+                  schema:
+                      type: string
+                  examples:
+                        lane:
+                            value: lane
+                        public:
+                            value: public
+                        transfer:
+                            value: transfer
+                - name: cn
+                  in: query
+                  description: The CN for the source.
+                  required: true
+                  schema:
+                      type: string
+                  example: STJUDE
+                - name: notes
+                  in: query
+                  description: Notes about the source(s) being created
+                  schema:
+                      type: string
+                  example: Test notes about this source
+                - name: name
+                  in: query
+                  description: The source's name
+                  schema:
+                      type: string
+                  example: C1TVCACXX.11
+                - name: repo_name
+                  in: query
+                  description: The name of the repo for the source. *Required when type is public.*
+                  schema:
+                      type: string
+                  example: development
+                - name: set_name
+                  in: query
+                  description: The set name for the source. *Required when type is public.*
+                  schema:
+                      type: string
+                  example:
+                      FFPE
+                - name: transfer_name
+                  in: query
+                  description: The transfer name to use for the source. *Required when type is transfer.*
+                  schema:
+                      type: string
+                  example: NCI
+                - name: pi
+                  in: query
+                  description: The name of the PI for this source. *Required when type is transfer.*
+                  schema:
+                      type: string
+                  example: test
+                - name: date
+                  in: query
+                  description: The date to use for the source. *Required when type is transfer.*
+                  schema:
+                      type: string
+                  example: "2021-11-08"
+                - name: provider
+                  in: query
+                  description: The provider for the source. *Required when the type is transfer.*
+                  schema:
+                      type: string
+                  example: NCI
+            responses:
+                201:
+                    description: Source(s) successfully created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    sourceId:
+                                        type: integer
+                                    laneId:
+                                        type: integer
+                            examples:
+                                lane:
+                                    value: {
+                                        sourceId: 458432,
+                                        laneId: 445442
+                                    }
+                                transfer:
+                                    value: {
+                                        sourceId: 458387,
+                                        transferSourceId: 458286
+                                    }
+                                public:
+                                    value: {
+                                        sourceId: 458387,
+                                        publicSourceId: 458360
+                                    }
+                400:
+                    description: Missing fields or invalid type.
+    /subject/{subject_name}:
+        get:
+            summary: 'Lookup Subject by Name'
+            description: 'Returns the subject record for the given subject name.'
+            parameters:
+                -   name: subject_name
+                    in: path
+                    required: true
+                    example: SJ123456
+                    schema:
+                        type: string
+            responses:
+                200:
+                    description: 'The subject record for the given subject name'
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Subject'
+    /subject/{subject_name}/orders:
+        get:
+            summary: 'Lookup Orders for Subject Name'
+            description: 'Returns an array of information about orders associated with the subject'
+            parameters:
+                -   name: subject_name
+                    in: path
+                    required: true
+                    example: SJ123456
+                    schema:
+                        type: string
+            responses:
+                200:
+                    description: ''
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    oneOf:
+                                        - type: string
+                                        - type: integer
+                                        - type: array
+                                          items:
+                                              type: object
+                                properties:
+                                    order_subject_id:
+                                        type: integer
+                                        example: 123456
+                                    order_id:
+                                        type: integer
+                                        example: 123456
+                                    name:
+                                        type: string
+                                    suite:
+                                        type: string
+                                    genome:
+                                        type: string
+                                    status:
+                                        $ref: '#/components/schemas/Status'
+                                    notes:
+                                        type: string
+                                    samples:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/Sample'
+                                    crp_run_items:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/Item'
+    /target/{name}:
+        get:
+            summary: 'Lookup Target by Name'
+            description: 'Returns the requested target record'
+            parameters:
+                -   name: name
+                    in: path
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                200:
+                    description: 'The requested target record'
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Target'
+                404:
+                    description: 'Target not found'
+                    content:
+                        application/json:
+                            schema:
+                                type: string
+                                example: Target not found
+    /tartan/archivable/{anls_type}:
+        get:
+            summary: 'List Archivable Tartan Runs'
+            description: 'Returns an array of Tartan runs that are archivable'
+            parameters:
+                -   name: anls_type
+                    in: path
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                200:
+                    description: 'A list of archivable Tartan analysis runs'
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        anls_type_name:
+                                            type: string
+                                            example: intake
+                                        anls_run_name:
+                                            type: string
+                                            example: 0XEp4VgW
+                                        
+                500:
+                    description: 'An error has occurred'
+                    content:
+                        application/json:
+                            schema:
+                                type: string
+                                example: "Something went wrong with the database transaction. Please contact the RAPTR web team."
+    /tartan/{sampleName}:
+        get:
+            summary: 'Get Tartan Run Information for Sample Name'
+            description: 'Returns information about a Tartan run for a given sample name'
+            parameters:
+                -   name: sampleName
+                    in: path
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                200:
+                    description: ''
+                400:
+                    description: Sample name not found
+components:
+    schemas:
+        AnlsRun:
+            type: object
+            properties:
+                anls_run_id:
+                    type: integer
+                    description: The unique identifier for the run
+                    example: 123456
+                anls_type_id:
+                    type: integer
+                    description: The unique identifier for the type of analysis being performed
+                    example: 123456
+                name:
+                    type: string
+                    description: The randomly generated name of the run
+                    example: 0XEp4VgW
+                is_complete:
+                    type: boolean
+                    description: A value indicating whether the run has completed or not
+                    example: false
+                is_archived:
+                    type: boolean
+                    description: A value indicating whether the run has completed or not
+                    example: false
+                inserted_time:
+                    type: string
+                    description: A timestamp for when the run was created
+                    example: '1970-01-01 00:00:00'
+                inserted_by:
+                    type: string
+                    description: The username of the account that inserted the record
+                    example: guestUser
+                last_modified_by:
+                    type: string
+                    description: The username of the account to last modify the record
+                    example: someOtherUser
+                last_modified_timestamp:
+                    type: string
+                    description: A timestamp for when the run was last modified
+                    example: '1970-01-01 00:00:00'
+                anlsRunItems:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/AnlsRunItem'
+        AnlsRunItem:
+            type: object
+            properties:
+                anls_run_item_id:
+                    type: integer
+                    description: The unique identifier for the record
+                    example: 123456
+                anls_run_id:
+                    type: integer
+                    description: The unique identifier for the analysis run
+                    example: 123456
+                item_id:
+                    type: integer
+                    description: The unique identifier for the item on which the analysis is being performed
+                    example: 123456
+                status_id:
+                    type: integer
+                    description: The unique identifier for the status of this run
+                    example: 123456
+                begin_date:
+                    type: string
+                    example: '1970-01-01 00:00:00'
+                end_date:
+                    type: string
+                    example: '1970-01-01 00:00:00'
+                assignee:
+                    type: string
+                    description: The username of the person assigned to the run
+                    example: 'someUser'
+                is_most_recent:
+                    type: boolean
+                    description: A flag for whether or not this is the most recent item for the associated run
+                    example: true
+                inserted_time:
+                    type: string
+                    description: A timestamp for when the record was created
+                    example: '1970-01-01 00:00:00'
+                inserted_by:
+                    type: string
+                    description: The username of the account that inserted the record
+                    example: guestUser
+                last_modified_by:
+                    type: string
+                    description: The username of the account to last modify the record
+                    example: someOtherUser
+                last_modified_timestamp:
+                    type: string
+                    description: A timestamp for when the record was last modified
+                    example: '1970-01-01 00:00:00'
+        Bam:
+            type: object
+            properties:
+                bam_id:
+                    type: integer
+                    description: The unique identifier for the record
+        Center:
+            type: object
+            properties:
+                center_id:
+                    type: integer
+                    example: 123456
+                name:
+                    type: string
+                official_name:
+                    type: string
+                inserted_time:
+                    type: string
+                    description: A timestamp for when the record was created
+                    example: '1970-01-01 00:00:00'
+                inserted_by:
+                    type: string
+                    description: The username of the account that inserted the record
+                    example: guestUser
+                last_modified_by:
+                    type: string
+                    description: The username of the account to last modify the record
+                    example: someOtherUser
+                last_modified_timestamp:
+                    type: string
+                    description: A timestamp for when the record was last modified
+                    example: '1970-01-01 00:00:00'
+        Notification:
+            type: object
+            properties:
+                notification_id:
+                    type: integer
+                    description: The notification's unique identifier
+                    example: 123456
+                description:
+                    type: string
+                    description: A description of the notification
+                name:
+                    type: string
+                    description: The name of the notification
+                    example: manual-registration-submitted
+                status_id:
+                    type: integer
+                    description: The unique identifier for the status associated with the notification
+                    example: 123456
+                anls_type_id:
+                    type: integer
+                    description: The unique identifier for the type of analysis run the notification applies to
+                    example: 123456
+                inserted_time:
+                    type: string
+                    description: A timestamp for when the record was created
+                    example: '1970-01-01 00:00:00'
+                inserted_by:
+                    type: string
+                    description: The username of the account that inserted the record
+                    example: guestUser
+                last_modified_by:
+                    type: string
+                    description: The username of the account to last modify the record
+                    example: someOtherUser
+                last_modified_timestamp:
+                    type: string
+                    description: A timestamp for when the record was last modified
+                    example: '1970-01-01 00:00:00'
+        PersonNotification:
+            type: object
+            properties:
+                person_notification_id:
+                    type: integer
+                    example: 12456
+                username:
+                    type: string
+                    example: someUser
+                notification_id:
+                    type: integer
+                    example: 123456
+                notification:
+                    $ref: '#/components/schemas/Notification'
+                center_id:
+                    type: integer
+                    example: 123456
+                center:
+                    $ref: '#/components/schemas/Center'
+                target_id:
+                    type: integer
+                    example: 123456
+                target:
+                    $ref: '#/components/schemas/Target'
+                project_id:
+                    type: integer
+                    example: 123456
+                project:
+                    $ref: '#/components/schemas/Project'
+                inserted_time:
+                    type: string
+                    description: A timestamp for when the record was created
+                    example: '1970-01-01 00:00:00'
+                inserted_by:
+                    type: string
+                    description: The username of the account that inserted the record
+                    example: guestUser
+                last_modified_by:
+                    type: string
+                    description: The username of the account to last modify the record
+                    example: someOtherUser
+                last_modified_timestamp:
+                    type: string
+                    description: A timestamp for when the record was last modified
+                    example: '1970-01-01 00:00:00'
+        Project:
+            type: object
+            required:
+                - id
+                - name
+            properties:
+                project_id:
+                    type: integer
+                    description: The project's unique identifier
+                name:
+                    type: string
+                    description: The name of the project
+                subproject:
+                    type: string
+                inserted_time:
+                    type: string
+                inserted_by:
+                    type: string
+                last_modified_by:
+                    type: string
+                last_modified_timestamp:
+                    type: string
+                legacy_project_name:
+                    type: string
+                description:
+                    type: string
+                jira_issues:
+                    type: string
+                notes:
+                    type: string
+                username:
+                    type: string
+                pipeline_support_group:
+                    type: string
+                pipeline_support_notes:
+                    type: string
+        Run:
+            type: object
+            properties:
+                run_id:
+                    description: The unique identifier for the run
+                    type: integer
+                center_id:
+                    description: The unique identifier for the run's center
+                    type: integer
+                run_name:
+                    description: The name of the run
+                    type: string
+                run_date:
+                    type: string
+                flowcell:
+                    type: string
+                needs_quality_trim:
+                    type: boolean
+                notes:
+                    type: string
+                inserted_time:
+                    type: string
+                    description: A timestamp for when the record was created
+                    example: '1970-01-01 00:00:00'
+                inserted_by:
+                    type: string
+                    description: The username of the account that inserted the record
+                    example: guestUser
+                last_modified_by:
+                    type: string
+                    description: The username of the account to last modify the record
+                    example: someOtherUser
+                last_modified_timestamp:
+                    type: string
+                    description: A timestamp for when the record was last modified
+                    example: '1970-01-01 00:00:00'
+                is_archived:
+                    type: boolean
+                    description: A flag indicating whether or not the run has been archived
+                    example: false
+                
+        Sample:
+            type: object
+            properties:
+                sample_id:
+                    type: integer
+                    description: The unique identifier for a sample
+                    example: 123456
+                formal_name:
+                    type: string
+                    description: The Comp Bio ID for the sample
+                    example: SJNORM123456_D1
+                lab_name:
+                    type: string
+                    example: SJNORM123456_D1-INPUT
+                subject_syn_used:
+                    type: string
+                    example: SJNORM123
+                disease_code:
+                    type: string
+                    example: NORM
+                sample_type:
+                    type: string
+                    example: D
+                sample_index:
+                    type: integer
+                    description: An integer used to store the index of the sample, which is the number that appears in `formal_name` following the sample_type
+                    example: 1
+                pi_name:
+                    type: string
+                    description: Another identifier for the sample that can include a COG number, a TBID or some other information
+                    example: TB-00-1234
+                subject_id:
+                    type: integer
+                    example: 123456
+                replaced_by:
+                    type: integer
+                    description: The unique identifier of the sample that replaced this sample.
+                    example: 123457
+                inserted_time:
+                    type: string
+                    description: A timestamp for when the record was created
+                    example: '1970-01-01 00:00:00'
+                inserted_by:
+                    type: string
+                    description: The username of the account that inserted the record
+                    example: guestUser
+                last_modified_by:
+                    type: string
+                    description: The username of the account to last modify the record
+                    example: someOtherUser
+                last_modified_timestamp:
+                    type: string
+                    description: A timestamp for when the record was last modified
+                    example: '1970-01-01 00:00:00'
+        Subject:
+            type: object
+            properties:
+                subject_id:
+                    type: integer
+                    example: 123456
+                organism_id:
+                    type: integer
+                    example: 123456
+                name:
+                    type: string
+                    example: SJ123456
+                synonyms:
+                    type: string
+                inserted_time:
+                    type: string
+                    description: A timestamp for when the record was created
+                    example: '1970-01-01 00:00:00'
+                inserted_by:
+                    type: string
+                    description: The username of the account that inserted the record
+                    example: guestUser
+                last_modified_by:
+                    type: string
+                    description: The username of the account to last modify the record
+                    example: someOtherUser
+                last_modified_timestamp:
+                    type: string
+                    description: A timestamp for when the record was last modified
+                    example: '1970-01-01 00:00:00'
+        Target:
+            type: object
+            required:
+                - target_id
+                - name
+                - analyte
+            properties:
+                target_id:
+                    type: integer
+                    example: 123456
+                name:
+                    type: string
+                    example: WHOLE_GENOME
+                seq_type:
+                    type: string
+                    example: WHOLEGENOME
+                description:
+                    type: string
+                analyte:
+                    type: string
+                    example: DNA
+                inserted_time:
+                    type: string
+                    description: A timestamp for when the record was created
+                    example: '1970-01-01 00:00:00'
+                inserted_by:
+                    type: string
+                    description: The username of the account that inserted the record
+                    example: guestUser
+                last_modified_by:
+                    type: string
+                    description: The username of the account to last modify the record
+                    example: someOtherUser
+                last_modified_timestamp:
+                    type: string
+                    description: A timestamp for when the record was last modified
+                    example: '1970-01-01 00:00:00'
+        Error:
+            type: object
+            required:
+                - code
+                - message
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+    securitySchemes:
+        Admin:
+            type: http
+            description: Admin accessible
+            scheme: bearer
+            bearerFormat: JWT
+        Analyst:
+            type: http
+            description: Analyst accessible
+            scheme: bearer
+            bearerFormat: JWT
+        BasicAuth:
+            type: http
+            scheme: basic
+security:
+    - Admin: []
+    - Analyst: []
+    - BasicAuth: []
