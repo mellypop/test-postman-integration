@@ -1,5 +1,5 @@
-site_name: "[PROJECT NAME] - St. Jude"
-repo_url: "https://github.com/stjude[cloud]/REPO_NAME"
+site_name: "RAPTR API - St. Jude"
+repo_url: "https://github.com/stjude/raptr"
 
 site_description: "[HIGH LEVEL DISCRIPTION.]"
 site_author: "St. Jude Cloud"
