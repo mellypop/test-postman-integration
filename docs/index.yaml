@@ -19,6 +19,8 @@ paths:
         post:
             summary: 'Send notifications related to the analysis run'
             description: ''
+            tags:
+                - AnlsRun
             parameters:
                 -   name: anls_run_name
                     in: path
