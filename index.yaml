@@ -15,12 +15,15 @@ servers:
     - url: 'https://rsith-test.stjude.org/raptr/api/stjude/v1'
       description: 'Testing'    
 paths:
+    /anls_runs:
+        summary: Analysis Runs
+        description: Actions related to Analysis Runs
     /anls_runs/{anls_run_name}/notify:
         post:
             summary: 'Send notifications related to the analysis run'
             description: ''
             tags:
-                - AnlsRun
+                - Anlalysis Run
             parameters:
                 -   name: anls_run_name
                     in: path
@@ -45,6 +48,8 @@ paths:
         get:
             summary: 'Get the status of a run by name'
             description: ''
+            tags:
+                - Analysis Run
             parameters:
                 -   name: anls_run_name
                     in: path
@@ -62,6 +67,8 @@ paths:
         post:
             summary: 'Set the status of run items by run name'
             description: ''
+            tags:
+                - Analysis Run
             parameters:
                 -   name: anls_run_name
                     in: path
@@ -106,6 +113,8 @@ paths:
             description:
                 Returns an array of AnlsRuns that have not yet been completed, are of a combable analysis type, and have a status of either initialized (I),
                 started (S), or failed (F).
+            tags:
+                - Analysis Run
             responses:
                 200:
                     description:
@@ -159,6 +168,8 @@ paths:
         get:
             summary: 'Run the comb for a specific order'
             description: 'Runs the comb over a specific order to update the analysis runs and associated items contained in that order'
+            tags:
+                - Analysis Run
             parameters:
                 -   name: order_id
                     in: path
@@ -189,6 +200,8 @@ paths:
         get:
             summary: List pending runs
             description: Returns a list of analysis runs that have been initialized but not started.
+            tags:
+                - Analysis Run
             parameters:
                 -   name: anls_type
                     in: path
