@@ -23,7 +23,7 @@ paths:
             summary: 'Send notifications related to the analysis run'
             description: ''
             tags:
-                - Anlalysis Run
+                - Analysis Run
             parameters:
                 -   name: anls_run_name
                     in: path
@@ -215,6 +215,8 @@ paths:
         get:
             summary: List BAMs
             description: Returns an array of all bams
+            tags:
+                - BAM
             responses:
                 200:
                     description: An array of BAMs
@@ -228,6 +230,8 @@ paths:
         post:
             summary: Create BAM
             description: Create a BAM record
+            tags:
+                - BAM
             parameters:
                 - name: qualifier
                   in: query
@@ -330,6 +334,8 @@ paths:
         get:
             summary: List Centers
             description: Returns an array of all centers ordered by their names.
+            tags:
+                - Center
             responses:
                 200:
                     description: An array of centers
@@ -343,6 +349,8 @@ paths:
         get:
             summary: List Notifications
             description: Returns a list of all notifications ordered by their descriptions.
+            tags:
+                - Notification
             responses:
                 200:
                     description: An array of notifications
@@ -357,7 +365,8 @@ paths:
             summary: Create Order
             description: Creates a new order record
             tags:
-                - order
+                - Order
+                - Analysis Request
             parameters:
                 - name: sampleTargetProjects
                   in: header
@@ -375,6 +384,9 @@ paths:
         post:
             summary: Add Note to Order
             description: Add the given note to the order
+            tags:
+                - Order
+                - Analysis Request
             parameters:
                 -   name: orderCode
                     in: path
@@ -405,6 +417,9 @@ paths:
         post:
             summary: 'Add Sample(s) to Order'
             description: 'Adds the given comma delimited list of sample names to the order.'
+            tags:
+                - Order
+                - Analysis Request
             parameters:
                 -   name: orderCode
                     in: path
@@ -444,6 +459,9 @@ paths:
         post:
             summary: Add Sjid Sample(s) to Order
             description: Add samples from a sample registration form (Sjid) to the order
+            tags:
+                - Order
+                - Analysis Request
             parameters:
                 -   name: orderCode
                     in: path
@@ -483,6 +501,9 @@ paths:
         post:
             summary: 'Add Srm to Order'
             description: ''
+            tags:
+                - Order
+                - Analysis Request
             parameters:
                 -   name: orderCode
                     in: path
@@ -512,6 +533,9 @@ paths:
         post:
             summary: 'Add Suite to Order'
             description: 'Adds the given suite to the order'
+            tags:
+                - Order
+                - Analysis Request
             parameters:
                 -   name: orderCode
                     in: path
@@ -543,7 +567,7 @@ paths:
             summary: '[Admin only] List People'
             description: '*[Admin only]* Returns all users'
             tags:
-                - person
+                - Person
             responses:
                 200:
                     description: A list of all users in RAPTR
@@ -572,6 +596,8 @@ paths:
         get:
             summary: My Profile
             description: The authenticated user's profile
+            tags:
+                - Person
             responses:
                 200:
                     description: Returns information about the authenticated user.
@@ -579,6 +605,8 @@ paths:
         get:
             summary: /person/new-token
             description: Generates a JWT bearer token for the authenticated user. Authentication for this action uses the username and password for the account for which a token is to be created instead of using a token itself.
+            tags:
+                - Person
             responses:
                 200:
                     description: Returns the newly created token
@@ -588,6 +616,8 @@ paths:
         post:
             summary: 'Unsubscribe Person from Notification'
             description: 'Unsubscribes the person from the notification referenced'
+            tags:
+                - Person
             parameters:
                 -   name: username
                     in: path
@@ -615,6 +645,8 @@ paths:
         get:
             summary: 'List Notifications for Person'
             description: 'Returns an array of notification records that the queried user is subscribed to'
+            tags:
+                - Person
             parameters:
                 -   name: username
                     in: path
@@ -636,6 +668,8 @@ paths:
         post:
             summary: Subscribe Person to Notification
             description: Subscribe the given person to the given notification
+            tags:
+                - Person
             parameters:
                 -   name: username
                     in: path
@@ -680,7 +714,7 @@ paths:
             summary: 'List projects'
             description: 'Returns an array of projects that the authenticated user can access'
             tags:
-                - project
+                - Project
             security:
                 - Admin: []
                 - Analyst: []
@@ -704,6 +738,8 @@ paths:
         post:
             summary: 'Create Project'
             description: 'Creates a new project record based on the given input'
+            tags:
+                - Project
             parameters:
                 -   name: projectName
                     in: query
@@ -739,6 +775,8 @@ paths:
         put:
             summary: Update Project
             description: Updates the relevant project record with new information
+            tags:
+                - Project
             parameters:
                 -   name: projectId
                     in: query
@@ -789,6 +827,8 @@ paths:
             summary: 'Lookup Project by Name and Subproject Name'
             description:
                 Gets a project record for the given project name and subproject name
+            tags:
+                - Project
             parameters:
                 -   name: name
                     in: path
@@ -820,6 +860,8 @@ paths:
         get:
             summary: 'Lookup Project by ID'
             description: 'Returns a project record based on the given primary key'
+            tags:
+                - Project
             parameters:
                 -   name: projectId
                     in: path
@@ -840,6 +882,8 @@ paths:
         post:
             summary: Add sample from sample registration to order
             description: Add the samples from a given sample registration form (Sjid) to the given order.
+            tags:
+                - Project
             parameters:
                 - name: projectId
                   in: path
@@ -881,6 +925,8 @@ paths:
         post:
             summary: Request New Research Project
             description: 'Creates a request for a new research project.'
+            tags:
+                - Project
             deprecated: true
             parameters:
                 -   name: piname
@@ -927,6 +973,8 @@ paths:
     /read_group:
         post:
             summary: Create new read group
+            tags:
+                - Read Group
             parameters:
                 - name: target_name
                   in: query
@@ -1054,6 +1102,8 @@ paths:
         post:
             summary: Create new run
             description: Creates a new run record
+            tags:
+                - Run
             responses:
                 201:
                     description: Newly created runs.
@@ -1066,6 +1116,8 @@ paths:
         get:
             summary: List Archivable Runs
             description: 'Returns an array of archivable runs'
+            tags:
+                - Run
             responses:
                 200:
                     description: A list of archivable runs
@@ -1079,6 +1131,8 @@ paths:
         get:
             summary: Get runs ready for sequencing
             description: Returns an array of runs that are ready for sequencing (runs without lanes).
+            tags:
+                - Run
             responses:
                 200:
                     description: A list or runs ready for sequencing
@@ -1118,6 +1172,8 @@ paths:
             description:
                 Get the runs inserted recently (within the past 2 weeks) for the authenticated user's center. The user submitting this request must belong
                 to at least one center.
+            tags:
+                - Run
             responses:
                 200:
                     description: An array of recent runs
@@ -1154,6 +1210,8 @@ paths:
             description:
                 Returns a list of runs that are considered stale (i.e., Runs created between 24 weeks before and 2 weeks before now that have not been assigned
                 a read group, lane, or a source).
+            tags:
+                - Run
             responses:
                 200:
                     description: An array of runs that are stale
@@ -1179,6 +1237,8 @@ paths:
             summary: 'Lookup Sample by Name'
             description:
                 Returns a sample record for the given name.
+            tags:
+                - Sample
             parameters:
                 -   name: name
                     in: path
@@ -1212,8 +1272,8 @@ paths:
             summary: Sample Lookup
             description: "Returns information related to the sample and its synonyms (SJUID and TBID)"
             tags:
-                - sample
-                - sample_synonym
+                - Sample
+                - Sample Synonym
             security:
                 - Admin: []
                 - Analyst: []
@@ -1305,6 +1365,8 @@ paths:
         post:
             summary: Create a new source record
             description: 'Creates a new source from the given parameters'
+            tags:
+                - Source
             security:
                 - Analyst: []
                 - Admin: []
@@ -1412,6 +1474,8 @@ paths:
         get:
             summary: 'Lookup Subject by Name'
             description: 'Returns the subject record for the given subject name.'
+            tags:
+                - Subject
             parameters:
                 -   name: subject_name
                     in: path
@@ -1430,6 +1494,8 @@ paths:
         get:
             summary: 'Lookup Orders for Subject Name'
             description: 'Returns an array of information about orders associated with the subject'
+            tags:
+                - Subject
             parameters:
                 -   name: subject_name
                     in: path
@@ -1480,6 +1546,8 @@ paths:
         get:
             summary: 'Lookup Target by Name'
             description: 'Returns the requested target record'
+            tags:
+                - Target
             parameters:
                 -   name: name
                     in: path
@@ -1504,6 +1572,9 @@ paths:
         get:
             summary: 'List Archivable Tartan Runs'
             description: 'Returns an array of Tartan runs that are archivable'
+            tags:
+                - Tartan
+                - Tartan Run
             parameters:
                 -   name: anls_type
                     in: path
@@ -1538,6 +1609,9 @@ paths:
         get:
             summary: 'Get Tartan Run Information for Sample Name'
             description: 'Returns information about a Tartan run for a given sample name'
+            tags:
+                - Tartan
+                - Tartan Run
             parameters:
                 -   name: sampleName
                     in: path
