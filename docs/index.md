@@ -1,1 +1,1 @@
-<swagger-ui src="./index.yaml"/>
+# Home
