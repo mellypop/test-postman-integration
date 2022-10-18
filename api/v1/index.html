@@ -5,23 +5,22 @@
 <meta charset="utf-8"/>
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<meta content="[HIGH LEVEL DISCRIPTION.]" name="description"/>
 <meta content="St. Jude Cloud" name="author"/>
-<link href="img/favicon.ico" rel="shortcut icon"/>
-<title>RAPTR API - St. Jude</title>
-<link href="css/bootstrap.min.css" rel="stylesheet"/>
-<link href="css/font-awesome.min.css" rel="stylesheet"/>
-<link href="css/base.css" rel="stylesheet"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>v1 - RAPTR API - St. Jude</title>
+<link href="../../css/bootstrap.min.css" rel="stylesheet"/>
+<link href="../../css/font-awesome.min.css" rel="stylesheet"/>
+<link href="../../css/base.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/purebasic.min.css" rel="stylesheet"/>
-<script defer="" src="js/jquery-1.10.2.min.js"></script>
-<script defer="" src="js/bootstrap.min.js"></script>
+<script defer="" src="../../js/jquery-1.10.2.min.js"></script>
+<script defer="" src="../../js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
 </head>
-<body class="homepage">
+<body>
 <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
 <div class="container">
-<a class="navbar-brand" href=".">RAPTR API - St. Jude</a>
+<a class="navbar-brand" href="../..">RAPTR API - St. Jude</a>
 <!-- Expander button -->
 <button class="navbar-toggler" data-target="#navbar-collapse" data-toggle="collapse" type="button">
 <span class="navbar-toggler-icon"></span>
@@ -30,31 +29,31 @@
 <div class="navbar-collapse collapse" id="navbar-collapse">
 <!-- Main navigation -->
 <ul class="nav navbar-nav">
-<li class="navitem active">
-<a class="nav-link" href=".">Home</a>
+<li class="navitem">
+<a class="nav-link" href="../..">Home</a>
 </li>
-<li class="dropdown">
+<li class="dropdown active">
 <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">API <b class="caret"></b></a>
 <ul class="dropdown-menu">
 <li>
-<a class="dropdown-item" href="api/v1/">v1</a>
+<a class="dropdown-item active" href="./">v1</a>
 </li>
 </ul>
 </li>
 </ul>
 <ul class="nav navbar-nav ml-auto">
 <li class="nav-item">
-<a class="nav-link disabled" rel="prev">
+<a class="nav-link" href="../.." rel="prev">
 <i class="fa fa-arrow-left"></i> Previous
                                 </a>
 </li>
 <li class="nav-item">
-<a class="nav-link" href="api/v1/" rel="next">
+<a class="nav-link disabled" rel="next">
                                     Next <i class="fa fa-arrow-right"></i>
 </a>
 </li>
 <li class="nav-item">
-<a class="nav-link" href="https://github.com/stjude/raptr/edit/master/docs/index.md"><i class="fa fa-github"></i> Edit on GitHub</a>
+<a class="nav-link" href="https://github.com/stjude/raptr/edit/master/docs/api/v1.md"><i class="fa fa-github"></i> Edit on GitHub</a>
 </li>
 </ul>
 </div>
@@ -70,15 +69,11 @@
 </div>
 <div class="navbar-collapse collapse card bg-secondary" id="toc-collapse">
 <ul class="nav flex-column">
-<li class="nav-item" data-level="1"><a class="nav-link" href="#home">Home</a>
-<ul class="nav flex-column">
-</ul>
-</li>
 </ul>
 </div>
 </div></div>
 <div class="col-md-9" role="main">
-<h1 id="home">Home</h1></div>
+<p><iframe class="swagger-ui-iframe" frameborder="0" id="ddf96698" src="swagger-ddf96698.html" style="overflow:hidden;width:100%;" width="100%"></iframe></p></div>
 </div>
 </div>
 <footer class="col-md-12">
@@ -87,10 +82,10 @@
 <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
 </footer>
 <script>
-            var base_url = ".",
+            var base_url = "../..",
                 shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
-<script defer="" src="js/base.js"></script>
+<script defer="" src="../../js/base.js"></script>
 <div aria-hidden="true" aria-labelledby="keyboardModalLabel" class="modal" id="mkdocs_keyboard_modal" role="dialog" tabindex="-1">
 <div class="modal-dialog">
 <div class="modal-content">
@@ -131,9 +126,34 @@
 </div>
 </div>
 </div>
-</body>
+<script>
+            window.update_swagger_ui_iframe_height = function (id) {
+                var iFrameID = document.getElementById(id);
+                if (iFrameID) {
+                    full_height = (iFrameID.contentWindow.document.body.scrollHeight + 80) + "px";
+                    iFrameID.height = full_height;
+                    iFrameID.style.height = full_height;
+                }
+            }
+        
+            const iframe_id_list = ["ddf96698"];
+        
+            let ticking = false;
+            document.addEventListener('scroll', function(e) {
+                if (!ticking) {
+                    window.requestAnimationFrame(()=> {
+                        let half_vh = window.innerHeight/2;
+                        for(var i = 0; i < iframe_id_list.length; i++) {
+                            let element = document.getElementById(iframe_id_list[i])
+                            let diff = element.getBoundingClientRect().top
+                            if(element.contentWindow.update_top_val){
+                                element.contentWindow.update_top_val(half_vh - diff)
+                            }
+                        }
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
+        </script></body>
 </html>
-<!--
-MkDocs version : 1.4.1
-Build Date UTC : 2022-10-18 16:50:14.188367+00:00
--->
