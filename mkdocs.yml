@@ -8,7 +8,7 @@ copyright: "© 2021 St. Jude Children's Research Hospital"
 nav:
   - Home: "index.md"
   - API:
-    - v1: api/v1.md
+    - v1: 'api/v1/index.md'
 
 theme: cosmo
 
