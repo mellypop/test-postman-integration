@@ -6,7 +6,9 @@ site_author: "St. Jude Cloud"
 copyright: "© 2021 St. Jude Children's Research Hospital"
 
 nav:
-  - "Home": "index.md"
+  - Home: "index.md"
+  - API:
+    - v1: api/v1.md
 
 theme: cosmo
 
