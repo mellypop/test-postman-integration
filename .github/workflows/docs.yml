@@ -23,6 +23,7 @@ jobs:
           python3 -m pip install mkdocs
           python3 -m pip install mkdocs-bootswatch
           python3 -m pip install mkdocs-swagger-ui-tag
+          python3 -m pip install mkdocs-material
 
       - name: Build docs
         run: mkdocs build
